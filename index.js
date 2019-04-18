@@ -1,6 +1,7 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 require('dotenv').config();
+const session = require('express-session')
 const app = express()
 const port = process.env.PORT || 5005
 const MongoClient = require('mongodb').MongoClient;
@@ -9,8 +10,11 @@ const mongoose = require('mongoose');
 const cors = require ('cors');
 const ConnectionURL = "mongodb+srv://tjaketheman:owner1@mycluster-zfcy6.mongodb.net/test?retryWrites=true";
 const dbName = "Pantrack";
+const Datastore = require('nedb');
+const NedbStore = require('connect-nedb-session')(session);
 
-var database, collection;
+const database, collection;
+const SS = new Datastore({ filename : './db/sessiiondb.db' })
 
 app.listen(port, () => {
     MongoClient.connect(ConnectionURL, { useNewUrlParser: true }, (error, client) => {
@@ -26,18 +30,20 @@ app.listen(port, () => {
 
 
 // app.use(express.static('public'))
+app.use(session({secret: 'dfsauibxczv', cookie: { maxAge: 60000 }}));
 app.use(cors())
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({extended: true }));
+
 
 
 app.post('/createaccount', cors(), (req, res) => {
     const body = req.body
     collection.insertOne(body, (error, result) => {
         if(error) {
-            return Response.status(500).send(error);
+            return res.status(500).send(error);
         }
-        res.status(200).send(body)
+        return res.status(200).send(body)
     })
 })
 
